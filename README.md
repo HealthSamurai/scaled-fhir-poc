@@ -1,4 +1,4 @@
-# Scaled FHIR Server
+# Scaled FHIR Server POC
 
 ## Start
 
