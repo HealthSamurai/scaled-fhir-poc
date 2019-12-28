@@ -88,6 +88,7 @@
   ([db hsql]
    (pr-error
     (let [sql (honey/honetize hsql)
+          _ (println sql)
           start (System/currentTimeMillis)]
       (try
         (let [res (jdbc/query db sql)]
