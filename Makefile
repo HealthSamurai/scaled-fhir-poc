@@ -12,7 +12,7 @@ repl:
 	clj -A:test:nrepl -R:test:nrepl -e "(-main)" -r
 
 up:
-	source .env && docker-compose up -d
+	docker-compose up --scale worker=5
 
 stop:
 	docker-compose stop
@@ -24,7 +24,7 @@ jar:
 	rm -rf target && clj -A:build
 
 docker:
-	docker build -t ${IMG} .
+	docker build -t scaled-fhir .
 
 pub:
 	docker push ${IMG}
@@ -32,7 +32,7 @@ pub:
 deploy:
 	cd deploy && cat srv.tpl.yaml | ./envtpl.mac | kubectl apply -f -
 
-all: jar docker pub deploy
+all: jar docker up
 	echo "Done"
 
 test:

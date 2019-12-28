@@ -1,4 +1,4 @@
-# Scaled FHIR Server
+# Scaled FHIR Server POC
 
 ## Start
 
@@ -6,5 +6,11 @@
 make up
 make repl
 # connect from ide
+```
+
+## To build project, make docker image and start 5-node citius cluster
+
+```sh
+make all
 ```
 
