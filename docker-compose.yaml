@@ -1,55 +1,26 @@
-version: '3.1'
+version: '2.1'
 services:
-  scaled-fhir-db-master:
-    image: ${PG_IMAGE}
-    container_name: scaled-fhir-db-master
-    ports:
-      - "${PGPORT_MASTER}:5432"
-    volumes:
-      - "./pgdata_master:/var/lib/postgresql/data"
+  scaled-fhir:
+    image: scaled-fhir:latest
     environment:
-      POSTGRES_USER:     "${PGUSER}"
-      POSTGRES_PASSWORD: "${PGPASSWORD}"
-      POSTGRES_DB:       "${PGDATABASE}"
-
-  scaled-fhir-db-alfa:
-    image: ${PG_IMAGE}
-    container_name: scaled-fhir-db-alfa
-    ports:
-      - "${PGPORT_ALFA}:5432"
-    volumes:
-      - "./pgdata_alfa:/var/lib/postgresql/data"
-    environment:
-      POSTGRES_USER:     "${PGUSER}"
-      POSTGRES_PASSWORD: "${PGPASSWORD}"
-      POSTGRES_DB:       "${PGDATABASE}"
-
-  scaled-fhir-db-beta:
-    image: ${PG_IMAGE}
-    container_name: scaled-fhir-db-beta
-    ports:
-      - "${PGPORT_BETA}:5432"
-    volumes:
-      - "./pgdata_beta:/var/lib/postgresql/data"
-    environment:
-      POSTGRES_USER:     "${PGUSER}"
-      POSTGRES_PASSWORD: "${PGPASSWORD}"
-      POSTGRES_DB:       "${PGDATABASE}"
-
-  # scaled-fhir:
-  #   image: "${IMG}"
-  #   container_name: scaled-fhir
-  #   environment:
-  #     PGHOST_MASTER: "scaled-fhir-db-master"
-  #     PGHOST_ALFA: "scaled-fhir-db-alfa"
-  #     PGHOST_BETA: "scaled-fhir-db-beta"
-  #     PGPORT: "5432"
-  #     PGDATABASE: "${PGDATABASE}"
-  #     PGUSER: "${PGUSER}"
-  #     PGPASSWORD: "${PGPASSWORD}"
-  #   ports:
-  #     - 8080:8887
-  #   depends_on:
-  #     - scaled-fhir-db-master
-  #     - scaled-fhir-db-alfa
-  #     - scaled-fhir-db-beta
+      PGHOST_MASTER: "master"
+      PGPORT: "5432"
+      PGDATABASE: postgres
+      PGUSER: postgres
+      PGPASSWORD: ""
+    depends_on: 
+      { manager: { condition: service_healthy } }
+  master:
+    container_name: "${COMPOSE_PROJECT_NAME:-citus}_master"
+    image: 'citusdata/citus:9.1.1'
+    ports: ["${MASTER_EXTERNAL_PORT:-5432}:5432"]
+    labels: ['com.citusdata.role=Master']
+  worker:
+    image: 'citusdata/citus:9.1.1'
+    labels: ['com.citusdata.role=Worker']
+    depends_on: { manager: { condition: service_healthy } }
+  manager:
+    container_name: "${COMPOSE_PROJECT_NAME:-citus}_manager"
+    image: 'citusdata/membership-manager:0.2.0'
+    volumes: ['/var/run/docker.sock:/var/run/docker.sock']
+    depends_on: { master: { condition: service_healthy } }
