@@ -4,6 +4,7 @@
             [hiccup.core]
             [clojure.java.shell :as shell]
             [route-map.core :as route-map]
+            [web.fhir]
             [clojure.string :as str])
 
   (:gen-class))
@@ -53,16 +54,22 @@
       {:status 404
        :body (str "Not found shard " (name shard-name))})))
 
+
+
 (def routes
   {:GET (fn [_] {:status 200 :body "Hello"})
    "db" {:GET #'db-index
-         [:shard] {"status" {:GET #'db-status}}}})
-
-(comment
-
-  (route-map/match [:get "/db/wow/status"] routes)
-
-  )
+         [:shard] {"status" {:GET #'db-status}}}
+   "Patient" {:GET #'web.fhir/get-patients
+              [:id] {:GET #'web.fhir/get-patient}}
+   "Observation" {:GET #'web.fhir/get-observations
+                  [:id] {:GET #'web.fhir/get-observation}}
+   "Encounter" {:GET #'web.fhir/get-encounters
+                [:id] #'web.fhir/get-encounter}
+   "Practitioner" {:GET #'web.fhir/get-practitioner
+                   [:id] 'web.fhir/get-practitioner}
+   "Group" {:GET #'web.fhir/get-groups
+            [:id] #'web.fhir/get-group}})
 
 
 (defn handler [{req :request :as ctx}]
