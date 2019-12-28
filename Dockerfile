@@ -15,3 +15,5 @@ CMD java -XX:-OmitStackTraceInFastThrow \
   -jar /app.jar -m scaled-fhir.core
 
 ADD target/scaled-fhir-1.0.0-standalone.jar /app.jar
+
+COPY migrations.sh /migrations/migrations.sh
