@@ -5,6 +5,7 @@
             [clojure.java.shell :as shell]
             [route-map.core :as route-map]
             [fhir.web]
+            [fhir.migrations]
             [clojure.string :as str])
 
   (:gen-class))
@@ -84,6 +85,7 @@
                  #_{:master (db.core/datasource (get-in cfg [:db :master]))
                             :shards (mapv (fn [db-cfg] (db.core/datasource db-cfg)) (get-in cfg [:db :shards]))})
         _ (swap! ctx assoc :db db)
+        _ (fhir.migrations/run-migration (:master db))
         disp (fn [req] (handler (assoc @ctx :request req)))
         _ (swap! ctx assoc :dispatch disp)
         web (when (:web cfg) (web.core/start {:port 8887} disp))
@@ -112,9 +114,7 @@
           :web {}}))
 
 (comment
-  (def *ctx (start {:db {:master (db.core/db-spec-from-env :master)
-                         :alfa (db.core/db-spec-from-env :alfa)
-                         :beta (db.core/db-spec-from-env :beta)}
+  (def *ctx (start {:db {:master (db.core/db-spec-from-env :master)}
                     :web {}}))
 
   (db.core/query (:master (:db @*ctx)) "select 1")
@@ -125,5 +125,7 @@
   (dispatch *ctx {:uri "/db/tables" :params {:q "class"}})
 
   (stop *ctx)
+
+  42
 
   )
