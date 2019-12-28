@@ -5,7 +5,7 @@
 (defn select-to-bundle [items]
   {:resourceType "Bundle"
    :type "searchset"
-   :entry  (map (fn [row] (assoc (cheshire.core/parse-string (:resource row) true)
+   :entry  (map (fn [row] (assoc (:resource row)
                                  :id (:id row)
                                  :resourceType (:rt row)))
                 items)})

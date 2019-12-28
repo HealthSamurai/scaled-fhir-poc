@@ -4,27 +4,37 @@
             [clojure.java.io :as io]
             [fhir.util :as u]))
 
+(comment
+
+  (db.core/query
+   db-ctx
+   "select * from practitioner")
+
+  )
+
+
+
 (defn get-resource-or-nil [db {id :id rt :resourceType}]
-  (when-let [res (db.core/query-first db (format "select *, %s rt from %s where id = '%s'"
+  (when-let [res (db.core/query-first db (format "select *, '%s' rt from %s where id = '%s'"
                                                  (str/capitalize rt)
                                                  (str/lower-case rt)
                                                  id))]
-    (assoc (cheshire.core/parse-string (:resource res) true)
+    (assoc (:resource res)
            :id (:id res)
            :resourceType (str/capitalize rt))))
 
 (defn get-resource [resourceType {{db :master} :db :as ctx}]
   (let [id (:id (:route-params ctx))
-        res (db.core/query-first db (format "select *, %s rt from %s where id = '%s'"
-                                            (str/capitalize resourceType)
-                                            (str/lower-case resourceType)
-                                            id))]
-    {:status 200
-     :json (assoc (cheshire.core/parse-string (:resource res) true)
-                  :id (:id res)
-                  :resourceType (str/capitalize resourceType))}))
+        res (get-resource-or-nil db {:id id :resourceType resourceType})]
+    (if (nil? res)
+      {:status 404
+       :json {:not :found}}
+      {:status 200
+       :json res})))
+
 
 (defn get-resources [resourceType ctx]
+  (def db-ctx (get-in ctx [:db :master]))
   {:status 200
    :json (u/select-to-bundle
           (db.core/query (get-in ctx [:db :master])
@@ -57,6 +67,7 @@ values('%s', $$%s$$) on conflict(id) do update set resource = EXCLUDED.resource;
     (if-let [resource (get-resource-or-nil db {:id id :resourceType resourceType})]
       (do
         (db.core/exec! db (format "delete from %s where id = '%s'" (str/lower-case resourceType) id))
-        resource)
+        {:status 200
+         :json resource})
       {:status 204
        :json nil})))
