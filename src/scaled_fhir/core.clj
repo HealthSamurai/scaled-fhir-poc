@@ -102,11 +102,7 @@
 
 (defn -main [& args]
   (println (db.core/db-spec-from-env :master))
-  (println (db.core/db-spec-from-env :alfa))
-  (println (db.core/db-spec-from-env :beta))
-  (start {:db {:master (db.core/db-spec-from-env :master)
-               :alfa (db.core/db-spec-from-env :alfa)
-               :beta (db.core/db-spec-from-env :beta)}
+  (start {:db {:master (db.core/db-spec-from-env :master)}
           :web {}}))
 
 (comment
