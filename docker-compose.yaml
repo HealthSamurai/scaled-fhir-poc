@@ -1,17 +1,17 @@
 version: '2.1'
 services:
-  # scaled-fhir:
-  #   image: scaled-fhir:latest
-  #   ports:
-  #   - "8080:8887"
-  #   environment:
-  #     PGHOST_MASTER: "master"
-  #     PGPORT: "5432"
-  #     PGDATABASE: postgres
-  #     PGUSER: postgres
-  #     PGPASSWORD: ""
-  #   depends_on:
-  #     { manager: { condition: service_healthy } }
+  scaled-fhir:
+    image: scaled-fhir:latest
+    ports:
+    - "8082:8887"
+    environment:
+      PGHOST_MASTER: "master"
+      PGPORT: "5432"
+      PGDATABASE: postgres
+      PGUSER: postgres
+      PGPASSWORD: ""
+    depends_on:
+      { manager: { condition: service_healthy } }
   master:
     container_name: "${COMPOSE_PROJECT_NAME:-citus}_master"
     image: 'citusdata/citus:9.1.1'

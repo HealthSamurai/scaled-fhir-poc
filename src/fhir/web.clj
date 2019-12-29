@@ -25,12 +25,24 @@
 
 (defn get-resources [resourceType ctx]
   (def db-ctx (get-in ctx [:db :master]))
-  {:status 200
-   :json (u/select-to-bundle
-          (db.core/query (get-in ctx [:db :master])
-                         (format "select *, '%s' rt from %s"
-                                 (str/capitalize resourceType)
-                                 (str/lower-case resourceType))))})
+  (let [name (:name (:params (:request ctx)))]
+    (if (not (nil? name))
+      {:status 200
+       :json (u/select-to-bundle
+              (db.core/query (get-in ctx [:db :master])
+                             (format "select  *, '%s'
+                                                  from %s t,
+                                                  jsonb_array_elements(resource#>'{resource, name}') elem
+                                                  where elem->>'given' iLIKE '%s';"
+                                     (str/capitalize resourceType)
+                                     (str/lower-case resourceType)
+                                     (format "%s%s%s" "%" name "%"))))}
+      {:status 200
+       :json (u/select-to-bundle
+              (db.core/query (get-in ctx [:db :master])
+                             (format "select *, '%s' rt from %s"
+                                     (str/capitalize resourceType)
+                                 (str/lower-case resourceType))))})))
 
 (defn create-resource [resourceType {{db :master} :db :as ctx}]
   (let [resource (u/body->map (:body (:request ctx)))
