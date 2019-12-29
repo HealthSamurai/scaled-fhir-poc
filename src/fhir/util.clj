@@ -5,14 +5,17 @@
             [fhir.util :as u]))
 
 (def patient-id-location
-  {"Encounter" [:subject :id]})
+  {"Encounter" [:subject]})
 
 (defn require-patient-id? [{resourceType :resourceType}]
   (contains? patient-id-location (str/capitalize resourceType)))
 
 (defn get-patient-id [resource]
   (when (require-patient-id? resource)
-    (get-in resource (get patient-id-location (:resourceType resource)))))
+    (let [{resourceType :resourceType id :id} (get-in resource (get patient-id-location (:resourceType resource)))]
+      (if (or (nil? resourceType) (= "Patient" resourceType))
+        id
+        resourceType))))
 
 
 (comment
