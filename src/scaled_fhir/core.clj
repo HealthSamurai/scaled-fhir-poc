@@ -62,7 +62,6 @@
                         :PUT #(fhir.web/update-resource resourceType %)
                         :DELETE #(fhir.web/delete-resource resourceType %)}}})
 
-
 (def routes
   (merge {:GET (fn [_] {:status 200 :body "Hello"})
           "db" {:GET #'db-index
