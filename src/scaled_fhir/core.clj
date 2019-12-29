@@ -62,14 +62,16 @@
                  :POST #(fhir.web/create-resource resourceType %)
                  [:id] {:GET #(fhir.web/get-resource resourceType %)
                         :PUT #(fhir.web/update-resource resourceType %)
-                        :DELETE #(fhir.web/delete-resource resourceType %)}}})
+                        :DELETE #(fhir.web/delete-resource resourceType %)}
+                 }})
+
 
 (defn sharded-endpoints [resourceType]
-  {resourceType {:GET #(fhir.web/get-resources resourceType %)
+  {resourceType {:GET #(fhir.web/get-sharded-resources resourceType %)
                  :POST #(fhir.web/create-sharded-resource resourceType %)
-                 [:id] {:GET #(fhir.web/get-resource resourceType %)
+                 [:id] {:GET #(fhir.web/get-sharded-resource resourceType %)
                         :PUT #(fhir.web/update-sharded-resource resourceType %)
-                        :DELETE #(fhir.web/delete-resource resourceType %)}}})
+                        :DELETE #(fhir.web/delete-sharded-resource resourceType %)}}})
 
 
 (def routes
@@ -78,6 +80,7 @@
                 [:shard] {"status" {:GET #'db-status}}}}
          (endpoints "Patient")
          (endpoints "Practitioner")
+         (endpoints "Group")
          (sharded-endpoints "Encounter")))
 
 

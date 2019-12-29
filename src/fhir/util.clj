@@ -1,40 +1,19 @@
 (ns fhir.util
   (:require [cheshire.core]
             [clojure.java.io :as io]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [fhir.util :as u]))
 
 (def patient-id-location
   {"Encounter" [:subject :id]})
+
+(defn require-patient-id? [{resourceType :resourceType}]
+  (contains? patient-id-location (str/capitalize resourceType)))
 
 (defn get-patient-id [resource]
   (when (require-patient-id? resource)
     (get-in resource (get patient-id-location (:resourceType resource)))))
 
-(defn require-patient-id? [{resourceType :resourceType}]
-  (contains? patient-id-location (str/capitalize resourceType)))
-
-(defn join-refernce-to-patient [{resourceType :resourceType :as resource}]
-  (if (require-patient-id? resource)
-    (json-patient-id (get patient-id-location resourceType))))
-
-
-(defn json-patient-id [[elem & path]]
-  (cond
-    (nil? elem)
-    "patient_id"
-
-    (nil? path)
-    (str "jsonb_build_object('"
-         (name elem) "', "
-         (json-patient-id path)
-         ", 'resourceType', 'Patient')")
-
-    :else
-    (str "jsonb_build_object('"
-         (name elem)
-         "', "
-         (json-patient-id path)
-         ")")))
 
 (comment
 
