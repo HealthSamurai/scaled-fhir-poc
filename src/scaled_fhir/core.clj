@@ -33,6 +33,7 @@
                                              :style "padding-left: 5px; color: #333"}
                                          (name shard)]) (keys (:db ctx)))]])})
 
+
 (defn db-status [{req :request cfg :cfg :as ctx}]
   (let [shard-name (keyword (:shard (:route-params ctx)))]
     (if-let [db-conn (conn-by-shard-name ctx shard-name)]
@@ -55,6 +56,7 @@
       {:status 404
        :body (str "Not found shard " (name shard-name))})))
 
+
 (defn endpoints [resourceType]
   {resourceType {:GET #(fhir.web/get-resources resourceType %)
                  :POST #(fhir.web/create-resource resourceType %)
@@ -62,13 +64,21 @@
                         :PUT #(fhir.web/update-resource resourceType %)
                         :DELETE #(fhir.web/delete-resource resourceType %)}}})
 
+(defn sharded-endpoints [resourceType]
+  {resourceType {:GET #(fhir.web/get-resources resourceType %)
+                 :POST #(fhir.web/create-sharded-resource resourceType %)
+                 [:id] {:GET #(fhir.web/get-resource resourceType %)
+                        :PUT #(fhir.web/update-sharded-resource resourceType %)
+                        :DELETE #(fhir.web/delete-resource resourceType %)}}})
+
+
 (def routes
   (merge {:GET (fn [_] {:status 200 :body "Hello"})
           "db" {:GET #'db-index
                 [:shard] {"status" {:GET #'db-status}}}}
          (endpoints "Patient")
          (endpoints "Practitioner")
-         (endpoints "Encounter")))
+         (sharded-endpoints "Encounter")))
 
 
 (defn handler [{req :request :as ctx}]
@@ -91,6 +101,7 @@
         _ (swap! ctx assoc :web web)]
     ctx))
 
+
 (defn stop [ctx]
   (try
     (when-let [srv (:web @ctx)] (srv))
@@ -101,11 +112,14 @@
         (db.core/shutdown conn)))
     (catch Exception e)))
 
+
 (defn dispatch [ctx req]
   ((:dispatch @ctx) req))
 
+
 (defn db-from-env []
   (db.core/db-spec-from-env))
+
 
 (defn -main [& args]
   (println (db.core/db-spec-from-env :master))
