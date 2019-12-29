@@ -5,7 +5,7 @@
 drop table if exists encounter;
 drop table if exists practitioner;
 drop table if exists patient;
-
+drop table if exists group;
 
 create table patient (
     id text,

@@ -116,12 +116,21 @@ values('%s', $$%s$$) on conflict(id) do update set resource = EXCLUDED.resource;
 
 (defn get-sharded-resources [resourceType ctx]
   (def db-ctx (get-in ctx [:db :master]))
-  {:status 200
-   :json (u/select-to-bundle
-          (db.core/query (get-in ctx [:db :master])
-                         (format "select patient_id || '_' || id as id, resource, '%s' rt from %s"
-                                 (str/capitalize resourceType)
-                                 (str/lower-case resourceType))))})
+  (let [patient-ids (:patient (:params (:request ctx)))]
+    (if (and (not (nil? patient-ids)) (= resourceType "Encounter"))
+      {:status 200
+       :json (u/select-to-bundle
+               (db.core/query (get-in ctx [:db :master])
+                              (format "select *, '%s' from %s where patient_id in (%s)\n"
+                                      (str/capitalize resourceType)
+                                      (str/lower-case resourceType)
+                                      (str/join ", " (map #(str "'" % "'") (str/split patient-ids #","))))))}
+      {:status 200
+       :json (u/select-to-bundle
+               (db.core/query (get-in ctx [:db :master])
+                              (format "select patient_id || '_' || id as id, resource, '%s' rt from %s"
+                                      (str/capitalize resourceType)
+                                      (str/lower-case resourceType))))})))
 
 (defn create-sharded-resource [resourceType {{db :master} :db :as ctx}]
   (let [resource (u/body->map (:body (:request ctx)))
